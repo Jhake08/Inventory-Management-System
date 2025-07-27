@@ -146,6 +146,12 @@ export default function Home() {
     // Sync to Google Sheets
     try {
       const item = updatedItems.find(i => i.id === id);
+      if (!item) {
+        console.error('Item not found for update');
+        setSyncStatus('error');
+        setTimeout(() => setSyncStatus('idle'), 3000);
+        return;
+      }
       GoogleSheetsService.updateConfig();
       await GoogleSheetsService.updateItemInMaster(item);
       setSyncStatus('success');
