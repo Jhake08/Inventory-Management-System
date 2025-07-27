@@ -25,10 +25,18 @@ interface Item {
   createdAt: string;
 }
 
+interface Stock {
+  id: number;
+  itemId: number;
+  quantity: number;
+  soldQuantity: number;
+  date: string;
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [items, setItems] = useState<Item[]>([]);
-  const [stocks, setStocks] = useState([]);
+  const [stocks, setStocks] = useState<Stock[]>([]);
   const [darkMode, setDarkMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle');
 
@@ -149,10 +157,16 @@ export default function Home() {
     }
   };
 
-  const deleteItem = async (id) => {
+  const deleteItem = async (id: number) => {
     setSyncStatus('syncing');
     
     const itemToDelete = items.find(item => item.id === id);
+    if (!itemToDelete) {
+      console.error('Item to delete not found');
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+      return;
+    }
     const updatedItems = items.filter(item => item.id !== id);
     setItems(updatedItems);
     localStorage.setItem('inventory_items', JSON.stringify(updatedItems));
@@ -174,7 +188,7 @@ export default function Home() {
     }
   };
 
-  const addStock = async (stockData) => {
+  const addStock = async (stockData: any) => {
     setSyncStatus('syncing');
     
     const newStock = {
@@ -191,6 +205,12 @@ export default function Home() {
     // Sync to Google Sheets
     try {
       const item = items.find(i => i.id === stockData.itemId);
+      if (!item) {
+        console.error('Item not found for stock entry');
+        setSyncStatus('error');
+        setTimeout(() => setSyncStatus('idle'), 3000);
+        return;
+      }
       GoogleSheetsService.updateConfig();
       await GoogleSheetsService.addStockEntry(item.code, stockData);
       setSyncStatus('success');
@@ -202,7 +222,7 @@ export default function Home() {
     }
   };
 
-  const updateItemTotals = (itemId, stockList = stocks) => {
+  const updateItemTotals = (itemId: number, stockList: Stock[] = stocks) => {
     const itemStocks = stockList.filter(stock => stock.itemId === itemId);
     const totalStock = itemStocks.reduce((sum, stock) => sum + (stock.quantity || 0), 0);
     const soldQuantity = itemStocks.reduce((sum, stock) => sum + (stock.soldQuantity || 0), 0);
