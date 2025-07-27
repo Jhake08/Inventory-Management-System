@@ -96,7 +96,7 @@ export default function Home() {
     }
   }, []);
 
-  const addItem = async (item) => {
+  const addItem = async (item: Omit<Item, 'id' | 'code' | 'createdAt' | 'totalStock' | 'soldQuantity' | 'remainingStock'>) => {
     setSyncStatus('syncing');
     
     const newItem = {
