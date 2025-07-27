@@ -10,9 +10,24 @@ import ReportingSection from '@/components/ReportingSection';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import GoogleSheetsService from '@/lib/googleSheetsClient';
 
+interface Item {
+  id: number;
+  code: string;
+  name: string;
+  category: string;
+  supplier: string;
+  price: number;
+  costPrice: number;
+  lowStockThreshold: number;
+  totalStock: number;
+  soldQuantity: number;
+  remainingStock: number;
+  createdAt: string;
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [stocks, setStocks] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle');
@@ -25,7 +40,7 @@ export default function Home() {
     if (savedItems) {
       setItems(JSON.parse(savedItems));
     } else {
-      const sampleItems = [
+      const sampleItems: Item[] = [
         {
           id: 1,
           code: 'ITM-001',
