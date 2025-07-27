@@ -126,7 +126,7 @@ export default function Home() {
     }
   };
 
-  const updateItem = async (id, updatedItem) => {
+  const updateItem = async (id: number, updatedItem: Partial<Item>) => {
     setSyncStatus('syncing');
     
     const updatedItems = items.map(item => 
