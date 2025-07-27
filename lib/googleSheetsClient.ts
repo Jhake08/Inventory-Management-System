@@ -71,9 +71,14 @@ class GoogleSheetsClient {
       }
 
       return response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('API request failed:', error.message);
+        throw error;
+      } else {
+        console.error('API request failed with unknown error:', String(error));
+        throw new Error('Unknown error occurred');
+      }
     }
   }
 
@@ -89,11 +94,18 @@ class GoogleSheetsClient {
         message: `Connected to spreadsheet: ${result.properties.title}`,
         data: result
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Connection failed: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Connection failed: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: `Connection failed: ${String(error)}`
+        };
+      }
     }
   }
 
@@ -105,7 +117,7 @@ class GoogleSheetsClient {
     try {
       // Check if Master_Items sheet exists
       const spreadsheet = await this.makeRequest('');
-      const masterSheet = spreadsheet.sheets.find(sheet => 
+      const masterSheet = spreadsheet.sheets.find((sheet: any) => 
         sheet.properties.title === 'Master_Items'
       );
 
@@ -152,11 +164,18 @@ class GoogleSheetsClient {
         success: true,
         message: 'Master sheet created successfully with proper headers'
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to create master sheet: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to create master sheet: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to create master sheet: Unknown error'
+        };
+      }
     }
   }
 
@@ -166,7 +185,7 @@ class GoogleSheetsClient {
       
       // Check if sheet already exists
       const spreadsheet = await this.makeRequest('');
-      const existingSheet = spreadsheet.sheets.find(sheet => 
+      const existingSheet = spreadsheet.sheets.find((sheet: any) => 
         sheet.properties.title === sheetName
       );
 
@@ -208,11 +227,18 @@ class GoogleSheetsClient {
         success: true,
         message: `Item sheet ${sheetName} created successfully`
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to create item sheet: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to create item sheet: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to create item sheet: Unknown error'
+        };
+      }
     }
   }
 
@@ -241,7 +267,7 @@ class GoogleSheetsClient {
         'Active'
       ]];
 
-      await this.makeRequest(`/values/Master_Items:append`, {
+      await this.makeRequest(`/values/Master_Items:append?valueInputOption=USER_ENTERED`, {
         method: 'POST',
         body: JSON.stringify({
           values: values,
@@ -259,11 +285,18 @@ class GoogleSheetsClient {
         success: true,
         message: `Item ${item.code} added to master sheet successfully`
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to add item to master sheet: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to add item to master sheet: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to add item to master sheet: Unknown error'
+        };
+      }
     }
   }
 
@@ -323,11 +356,18 @@ class GoogleSheetsClient {
         success: true,
         message: `Item ${item.code} updated in master sheet successfully`
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to update item in master sheet: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to update item in master sheet: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to update item in master sheet: Unknown error'
+        };
+      }
     }
   }
 
@@ -358,7 +398,7 @@ class GoogleSheetsClient {
 
       // Get sheet ID for Master_Items
       const spreadsheet = await this.makeRequest('');
-      const masterSheet = spreadsheet.sheets.find(sheet => 
+      const masterSheet = spreadsheet.sheets.find((sheet: any) => 
         sheet.properties.title === 'Master_Items'
       );
 
@@ -390,11 +430,18 @@ class GoogleSheetsClient {
         success: true,
         message: `Item ${itemCode} deleted from master sheet successfully`
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to delete item from master sheet: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to delete item from master sheet: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to delete item from master sheet: Unknown error'
+        };
+      }
     }
   }
 
@@ -420,7 +467,7 @@ class GoogleSheetsClient {
         stockData.totalStock || 0
       ]];
 
-      await this.makeRequest(`/values/${sheetName}:append`, {
+      await this.makeRequest(`/values/${sheetName}:append?valueInputOption=USER_ENTERED`, {
         method: 'POST',
         body: JSON.stringify({
           values: values,
@@ -432,11 +479,18 @@ class GoogleSheetsClient {
         success: true,
         message: `Stock entry added to ${sheetName} successfully`
       };
-    } catch (error) {
-      return {
-        success: false,
-        message: `Failed to add stock entry: ${error.message}`
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: `Failed to add stock entry: ${error.message}`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to add stock entry: Unknown error'
+        };
+      }
     }
   }
 }
