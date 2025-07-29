@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,6 +39,7 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle');
 
+  // Initialize data from localStorage
   useEffect(() => {
     const savedItems = localStorage.getItem('inventory_items');
     const savedStocks = localStorage.getItem('inventory_stocks');
@@ -121,8 +121,11 @@ export default function Home() {
     setItems(updatedItems);
     localStorage.setItem('inventory_items', JSON.stringify(updatedItems));
 
-    // Sync to Google Sheets
     try {
+      if (!newItem.name || !newItem.category) {
+        throw new Error('Missing required fields');
+      }
+      
       GoogleSheetsService.updateConfig();
       await GoogleSheetsService.addItemToMaster(newItem);
       setSyncStatus('success');
@@ -143,15 +146,12 @@ export default function Home() {
     setItems(updatedItems);
     localStorage.setItem('inventory_items', JSON.stringify(updatedItems));
 
-    // Sync to Google Sheets
     try {
-      const item = updatedItems.find(i => i.id === id);
+      const item = updatedItems.find(item => item.id === id);
       if (!item) {
-        console.error('Item not found for update');
-        setSyncStatus('error');
-        setTimeout(() => setSyncStatus('idle'), 3000);
-        return;
+        throw new Error('Item not found for update');
       }
+      
       GoogleSheetsService.updateConfig();
       await GoogleSheetsService.updateItemInMaster(item);
       setSyncStatus('success');
@@ -168,11 +168,11 @@ export default function Home() {
     
     const itemToDelete = items.find(item => item.id === id);
     if (!itemToDelete) {
-      console.error('Item to delete not found');
       setSyncStatus('error');
       setTimeout(() => setSyncStatus('idle'), 3000);
       return;
     }
+    
     const updatedItems = items.filter(item => item.id !== id);
     setItems(updatedItems);
     localStorage.setItem('inventory_items', JSON.stringify(updatedItems));
@@ -181,20 +181,19 @@ export default function Home() {
     setStocks(updatedStocks);
     localStorage.setItem('inventory_stocks', JSON.stringify(updatedStocks));
 
-    // Sync to Google Sheets
     try {
       GoogleSheetsService.updateConfig();
       await GoogleSheetsService.deleteItemFromMaster(itemToDelete.code);
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (error) {
-      console.error('Failed to sync item deletion to Google Sheets:', error);
+      console.error('Failed to sync item deletion:', error);
       setSyncStatus('error');
       setTimeout(() => setSyncStatus('idle'), 3000);
     }
   };
 
-  const addStock = async (stockData: any) => {
+  const addStock = async (stockData: Omit<Stock, 'id' | 'date'>) => {
     setSyncStatus('syncing');
     
     const newStock = {
@@ -202,27 +201,25 @@ export default function Home() {
       id: Date.now(),
       date: new Date().toISOString(),
     };
+    
     const updatedStocks = [...stocks, newStock];
     setStocks(updatedStocks);
     localStorage.setItem('inventory_stocks', JSON.stringify(updatedStocks));
 
     updateItemTotals(stockData.itemId, updatedStocks);
 
-    // Sync to Google Sheets
     try {
-      const item = items.find(i => i.id === stockData.itemId);
+      const item = items.find(item => item.id === stockData.itemId);
       if (!item) {
-        console.error('Item not found for stock entry');
-        setSyncStatus('error');
-        setTimeout(() => setSyncStatus('idle'), 3000);
-        return;
+        throw new Error('Associated item not found');
       }
+      
       GoogleSheetsService.updateConfig();
       await GoogleSheetsService.addStockEntry(item.code, stockData);
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (error) {
-      console.error('Failed to sync stock entry to Google Sheets:', error);
+      console.error('Failed to sync stock entry:', error);
       setSyncStatus('error');
       setTimeout(() => setSyncStatus('idle'), 3000);
     }
@@ -259,6 +256,12 @@ export default function Home() {
         />
         
         <main className="container mx-auto px-4 py-6">
+          {syncStatus === 'syncing' && (
+            <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg">
+              Syncing with Google Sheets...
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <Dashboard 
               items={items}
